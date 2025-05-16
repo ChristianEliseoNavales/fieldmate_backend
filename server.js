@@ -17,10 +17,12 @@ app.use(express.json()); // To parse JSON request bodies
 // Routes
 const journalRoutes = require('./routes/journalRoutes');
 const userRoutes = require("./routes/userRoutes");
+const attendanceRoutes = require('./routes/attendanceRoutes');
 
 app.use('/api/journal', journalRoutes);
 app.use('/api/users', userRoutes);
 app.use("/api", userRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Start server
 app.listen(PORT, () => {
