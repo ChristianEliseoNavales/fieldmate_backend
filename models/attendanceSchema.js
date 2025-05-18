@@ -6,6 +6,7 @@ const attendanceSchema = new mongoose.Schema({
   email: { type: String, required: true },
   timeIn: { type: String },
   timeOut: { type: String, default: null },
+  hours: { type: String, default: null }, 
   date: { type: String },
   company: String,
   approved: { type: Boolean, default: false },

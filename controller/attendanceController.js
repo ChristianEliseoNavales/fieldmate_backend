@@ -25,20 +25,17 @@ const timeIn = async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
-    // Check if record already exists for today
     const today = new Date().toLocaleDateString();
     const existing = await Attendance.findOne({ email, date: today });
     if (existing) {
       return res.status(400).json({ message: 'Already timed in today' });
     }
 
-    // Get user info
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Format timeIn as "hh:mm AM/PM"
     const now = new Date();
     const timeInFormatted = now.toLocaleTimeString([], {
       hour: '2-digit',
@@ -52,10 +49,12 @@ const timeIn = async (req, res) => {
       email: user.email,
       timeIn: timeInFormatted,
       timeOut: null,
+      hours: null, // ✅ initially null
       date: today,
       company: user.company,
       approved: false,
       denied: false,
+      submitted: false,
     });
 
     const saved = await attendance.save();
@@ -66,6 +65,7 @@ const timeIn = async (req, res) => {
   }
 };
 
+// PUT /api/attendance/timeout/:id
 const timeOut = async (req, res) => {
   try {
     const { id } = req.params;
@@ -76,15 +76,36 @@ const timeOut = async (req, res) => {
       hour12: true,
     });
 
-    const updated = await Attendance.findByIdAndUpdate(
-      id,
-      { timeOut: timeOutFormatted },
-      { new: true }
-    );
-
-    if (!updated) {
+    const record = await Attendance.findById(id);
+    if (!record) {
       return res.status(404).json({ message: 'Attendance record not found' });
     }
+
+    if (!record.timeIn) {
+      return res.status(400).json({ message: 'Time In not found for this record' });
+    }
+
+    // Parse both times as full Date objects
+    const todayStr = new Date().toLocaleDateString();
+    const timeInDate = new Date(`${todayStr} ${record.timeIn}`);
+    const timeOutDate = new Date(`${todayStr} ${timeOutFormatted}`);
+
+    let diffMs = timeOutDate - timeInDate;
+    if (diffMs < 0) {
+      diffMs += 12 * 60 * 60 * 1000; // handle AM/PM rollover if needed
+    }
+
+    const minutes = Math.floor(diffMs / 60000);
+    const hoursStr = `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+
+    const updated = await Attendance.findByIdAndUpdate(
+      id,
+      {
+        timeOut: timeOutFormatted,
+        hours: hoursStr, // ✅ store calculated hours
+      },
+      { new: true }
+    );
 
     res.status(200).json(updated);
   } catch (err) {
@@ -111,7 +132,6 @@ const submitAttendance = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err });
   }
 };
-
 
 const getCompanyAttendances = async (req, res) => {
   const { email, date } = req.query;
