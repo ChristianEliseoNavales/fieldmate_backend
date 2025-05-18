@@ -113,4 +113,67 @@ const submitAttendance = async (req, res) => {
 };
 
 
-module.exports = { getTodayAttendance, timeIn, timeOut, submitAttendance };
+const getCompanyAttendances = async (req, res) => {
+  const { email, date } = req.query;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const filter = {
+      company: user.company,
+      approved: false,
+      denied: false,
+    };
+
+    if (date) {
+      filter.date = date;
+    }
+
+    const attendanceRecords = await Attendance.find(filter);
+    res.status(200).json(attendanceRecords);
+  } catch (err) {
+    console.error('Error fetching company attendance:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+const approveAttendance = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updated = await Attendance.findByIdAndUpdate(id, { approved: true }, { new: true });
+
+    if (!updated) return res.status(404).json({ message: 'Attendance not found' });
+
+    res.status(200).json(updated);
+  } catch (err) {
+    console.error('Error approving attendance:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+};
+
+const denyAttendance = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updated = await Attendance.findByIdAndUpdate(id, { denied: true }, { new: true });
+
+    if (!updated) return res.status(404).json({ message: 'Attendance not found' });
+
+    res.status(200).json(updated);
+  } catch (err) {
+    console.error('Error denying attendance:', err);
+    res.status(500).json({ message: 'Server error', error: err });
+  }
+};
+
+module.exports = { 
+  getTodayAttendance, 
+  timeIn, 
+  timeOut, 
+  submitAttendance, 
+  getCompanyAttendances, 
+  approveAttendance, 
+  denyAttendance 
+};
