@@ -7,7 +7,8 @@ const {
     submitAttendance, 
     getCompanyAttendances, 
     approveAttendance, 
-    denyAttendance 
+    denyAttendance,
+    getAllAttendance
 } = require('../controller/attendanceController');
 
 router.get('/today', getTodayAttendance);
@@ -17,5 +18,6 @@ router.put('/submit/:id', submitAttendance);
 router.get('/company', getCompanyAttendances);
 router.put('/approve/:id', approveAttendance);
 router.put('/deny/:id', denyAttendance);
+router.get('/', getAllAttendance);
 
 module.exports = router;

@@ -65,6 +65,7 @@ const getUserByEmail = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     res.json({
+      email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       company: user.company,

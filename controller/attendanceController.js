@@ -188,7 +188,20 @@ const denyAttendance = async (req, res) => {
   }
 };
 
+// GET /api/attendance
+const getAllAttendance = async (req, res) => {
+  try {
+    const all = await Attendance.find();
+    res.status(200).json(all);
+  } catch (err) {
+    console.error("Error fetching all attendance records:", err);
+    res.status(500).json({ message: "Server error", error: err });
+  }
+};
+
+
 module.exports = { 
+  getAllAttendance,
   getTodayAttendance, 
   timeIn, 
   timeOut, 
